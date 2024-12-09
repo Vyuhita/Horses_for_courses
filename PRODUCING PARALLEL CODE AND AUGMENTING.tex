@@ -1,0 +1,175 @@
+\begin{table*}[t]
+%\begin{wraptable}{l}{0.5\textwidth}
+
+\centering
+\vspace{-0.8em}
+\caption{Algorithm (left), Specification (right)}
+\label{tab:mytable}
+\begin{minipage}{.45\linewidth}
+\centering
+%\begin{table}[H]
+%\parbox[t]{\linewidth}{\caption{Algorithm}}
+\begin{small}
+%\textbf{Algorithm}
+\centering
+\vspace{10pt}
+$\left[\begin{array}{ll}
+A_{00} & A_{01} \\
+A_{10} & A_{11}
+\end{array}\right] \times\left[\begin{array}{ll}
+B_{00} & B_{01} \\
+B_{10} & B_{11}
+\end{array}\right]=\left[\begin{array}{ll}
+A_{00} B_{00}+A_{01} B_{10} & A_{00} B_{01}+A_{01} B_{11} \\
+A_{10} B_{00}+A_{11} B_{10} & A_{10} B_{01}+A_{11} B_{11}
+\end{array}\right]$
+
+\end{small}
+%\end{table}
+\end{minipage}%
+\begin{minipage}{.45\linewidth}
+\centering
+%\begin{small}
+%    \textbf{Specification}
+%\end{small}
+\begin{small}
+\begin{verbatim}
+A(<x,y,z>)
+Parallel: A(<x00 y00 z00>) A(<x01 y00 z01>) 
+         A(<x10 y10 z00>) A(<x11 y10 z01>)
+Parallel: A(<x00 y01 z10>) A(<x01 y01 z11>) 
+         A(<x10 y11 z10>) A(<x11 y11 z11>)
+\end{verbatim}
+\end{small}
+
+\end{minipage}
+\end{table*}
+
+%\end{wraptable}
+%\clearpage
+
+Table~\ref{tab:mytable} presents a recursive approach and the corresponding specification to compute the product of two matrices $A$ and $B$. The approach on the left partitions the matrices into block matrices with four blocks of roughly equal size. It then computes the product of blocks to form the final product. This divide-conquer approach is represented with a method specification on the right. The specification requires that the first parameter of a method is the write parameter, and remaining are the read parameters. Hence, the recursive method represented as \texttt{A}  computes the product of two matrices \texttt{y}, and \texttt{z} and adds the result to the data stored in matrix \texttt{x}.  Essentially method \texttt{A} represents a multiply-add operation. The details of symbols \texttt{<}, \texttt{>}, blankspace or comma to separate arguments can be ignored and have no special meaning. The keyword \texttt{Parallel} is an annotation that tells that all the method calls on the same line may be executed in parallel. As we can see, there is a one-to-one correspondence between the specification and the divide-conquer approach on the left. The specification 
+ shows further details indicating multiplication of \texttt{$y_{ij}$} and \texttt{$z_{ij}$} and adding  the result to \texttt{$x_{ij}$}. 
+ Note that the base case of recursive method is not part of the specification. Also, note that for matrix sizes that are powers of two, the method works very well without extensions. In the code that is emitted from this specification, the base case implementation is left blank and is expected to be augmented with optimized kernels such as SIMD codes, CUDA kernels, or locality optimized codes.  
+
+Starting from the specification, the MPI+Cilk code generation requires  parallelism inference, data decomposition, task creation, and communication insertion. Importantly, the generated code will be correct only if the specification corresponding to the algorithm satisfies the {\em inclusive} and {\em intersection} properties. We omit these and provide a system-level overview here and refer the readers to~\cite{hegde2019d2p} for details. The specification for recursive matrix multiplication can be written in multiple ways e.g., with the help of two recursive methods \texttt{A} and \texttt{B}, where method \texttt{A} implements the addition and method \texttt{B} implements the multiplication. However, some specifications may lead to inefficiencies when temporaries are used and some may not satisfy the inclusive and intersection properties. ~\cite{hegde2019d2p} showed the existence of those properties in all Dynamic Programming (DP) algorithms. Whereas, in this paper we consider a flavor of matrix multiplication algorithm, create the corresponding spec and generate efficient hybrid parallel code. Figure~\ref{fig:workflow} illustrates the system overview. The specification is input to D2P to generate 
+ MPI+Cilk parallel code. This code has recursive method implementations with empty recursion base case, which is filled by the programmers. The resulting augmented code is a hybrid-parallel code that is executed on SIMD, multicore, manycore, and GPUs.  % d2p paper
+\begin{figure}[h]
+    \centering
+    \input{workflow}
+    \caption{System overview}
+    \label{fig:workflow}
+\end{figure}
+ 
+%\begin{mdframed}[linewidth=0.10pt,linecolor=black]
+\begin{figure}[h]
+\begin{minted}[fontsize=\footnotesize]{c}
+void A( /* Method Signature */ ) {
+    if ((x->coords[0] == x->coords[2]) 
+    && (x->coords[1] == x->coords[3])) {   
+    \end{minted}
+    \vspace{-3mm}
+\begin{tcolorbox}[colback=white, boxrule=0.5pt, sharp corners,title= Optimized terminating case with AVX.  ]
+\begin{minted}[fontsize=\footnotesize]{c}
+ // Loop over rows of A
+    for (int i = 0; i < size; i++) {
+        // Loop over columns of B
+        for (int j = 0; j < size; j++) {
+        // Initialize the result vector to zero
+            __m256i result = _mm256
+                             _setzero_si256();
+            // (process 8 elements at a time)
+            for (int k = 0; k < size; k += 8) {
+                // Load 8 elements from B and C
+                __m256i b = _mm256_loadu_si256
+                ((__m256i*)&B[i * size + k]);
+                //similarly for c
+                // Multiply and accumulate
+                result = _mm256_add_epi32(result
+                , _mm256_mullo_epi32(b, c));
+            }
+            //Accumulate result into A
+        }
+    }
+    \end{minted}
+\end{tcolorbox}
+\begin{minted}[fontsize=\footnotesize]{c}   
+     // Auto Generated Code to handle
+    A_unroll(&x00, xData, parentTileIDx * 4 + 0,
+    &y00, yData, parentTileIDy * 4 + 0, &z00, 
+    zData, parentTileIDz * 4 + 0,
+    callStackDepth + 1);//similarly for x01,x10,x11  
+    A_unroll(&x00, xData, parentTileIDx  * 4 + 0,
+    &y01, yData,parentTileIDy * 4 + 1, &z10,
+    zData, parentTileIDz  * 4 + 2,
+    callStackDepth + 1);//similarly for x01,x10,x11
+}
+\end{minted}
+ \caption{Augmenting with AVX code.}
+    \label{fig:d2p_avx}
+\end{figure}
+%\end{mdframed}
+
+
+\begin{figure}[h]
+\begin{minted}[fontsize=\footnotesize]{c}
+void A( /* Method Signature */ ) {
+  if (x->coords[0] == x->coords[2]) 
+  && (x->coords[1] == x->coords[3])) {  
+  \end{minted}
+  \vspace{-3mm}
+\begin{tcolorbox}[colback=white, boxrule=0.5pt, sharp corners, title= Optimized terminating case with NEON. ]
+\begin{minted}[fontsize=\footnotesize]{c}
+ // Loop over rows of A
+  for (int i = 0; i < size; i++) {
+    // Loop over columns of B
+    for (int j = 0; j < size; j++) {
+      // Initialize the result vector to zero
+      float32x4_t result = 
+                      vdupq_n_f32(0.0f);
+      // process 4 elements at a time)
+      for (int k = 0; k < size; k += 4) {
+        // Load 4 elements from B and C
+        float32x4_t b = vld1q_f32
+                          (&B[i * size + k]);
+        // Similarly for C and then Multiply
+        //and accumulate
+        result = vmlaq_f32(result, b, c);
+      }
+      // Accumulate the result into A
+    }
+  }
+\end{minted}
+\end{tcolorbox}
+\begin{minted}[fontsize=\footnotesize]{c}
+// auto-generated code to handle
+  A_unroll(&x00, xData, parentTileIDx * 4 + 0,
+  &y00, yData, parentTileIDy * 4 + 0, &z00, 
+  zData, parentTileIDz * 4 + 0,
+  callStackDepth + 1);//similarly for x01,x10,x11
+  A_unroll(&x00, xData, parentTileIDx * 4 + 0,
+  &y01, yData,parentTileIDy * 4 + 1, &z10,
+  zData, parentTileIDz * 4 + 2,
+  callStackDepth + 1);//similarly for x01,x10,x11
+}
+\end{minted}
+\caption{Augmenting with Arm Neon code.}
+    \label{fig:d2p_NEON}
+\end{figure}
+
+Figures~\ref{fig:d2p_avx} and ~\ref{fig:d2p_NEON} show how handwritten SIMD codes for x86 and Arm systems are integrated with D2P generated code to produce hybrid code. We use intrinsics---C-style functions provided to manipulate the vector registers without writing assembly code---available from Intel and Arm. The same technique is applied to create a number of flavors of hybrid parallel code where the base case implementations to multiply two matrices (of smaller sizes) are different. The below list shows a complete list of different flavors of matrix multiplication implementations:
+\begin{itemize}
+\item \texttt{d2p\_avx, d2p\_avx2, avx, avx2}: code using the 256-bit and 512-bit vector registers on x86 architecture. Meant for execution on multicores, manycores across compute nodes.
+\item \texttt{d2p\_neon, neon}: code using Arm's Neon vector registers. Meant for execution on multicores, manycores across compute nodes.
+\item \texttt{d2p\_cuda, cuda}: code using single GPU to accelerate matrix multiplication. Meant for execution on GPU servers.
+\item \texttt{d2p\_cublas, cublas}: code using single GPU and a BLAS-like library API available to multiply matrices. Meant for execution on GPU servers.
+\item \texttt{d2p\_cudamultigpu, cudamultigpu}: code using multiple GPUs to accelerate matrix multiplication. Meant for execution on GPU servers.
+\item \texttt{omp} recursive implementation of matrix multiplication using OpenMP tasks. Meant for execution on multicore CPU servers.
+\item \texttt{Cilk} recursive implementation of matrix multiplication using Cilk. Meant for execution on multicore CPU servers.
+\item \texttt{pytorch\_cpu, pytorch\_gpu, pytorch\_tpu} implementation using the Pytorch framework on multicore CPU, GPU, and TPU.
+\item \texttt{tensorflow\_cpu, tensorflow\_gpu, tensorflow\_tpu} implementation using the Tensorflow framework on multicore CPU, GPU, and TPU.
+\item \texttt{jetson\_nano} iterative implementation of matrix multiplication using CUDA on Jetson nano.
+\end{itemize}
+
+In the above list, flavors that do not have \texttt{d2p\_} prefix are implementations that are not hybrid parallel i.e. are not codes generated by D2P. They are handwritten optimized implementations using recursive algorithm.  Also, each of the above flavors have two sub-flavors one each corresponding to single- and double-precision data. 
+

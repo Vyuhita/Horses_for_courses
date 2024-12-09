@@ -1,0 +1,30 @@
+
+\tikzset{
+    >=stealth',
+    % Specifications for style of Table Cell:
+    tcell/.style = {
+            rectangle,
+            draw=black,
+            minimum width=3cm,
+            minimum height=3cm,
+            text centered
+            % ,
+            % font=\sffamily
+        },
+    every node/.style={
+            inner sep=.7cm,
+            fill=white
+            % ,
+            % font=\sffamily
+        }
+}
+\tikzstyle{XOR} = [draw,circle]
+\tikzstyle{line} = [draw, very thick, color=black!50, -latex']
+
+
+\begin{tikzpicture}[node distance=0cm, align=center]
+    \node[tcell](A){A};
+    \node[tcell,right = of A](B){B};
+    \node[tcell,below = of A](C){C};
+    \node[tcell,below = of B](D){D};
+\end{tikzpicture}

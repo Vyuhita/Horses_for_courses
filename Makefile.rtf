@@ -1,0 +1,51 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww12720\viewh6680\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 # Define the main LaTeX file (without extension)\
+MAIN = main\
+\
+# Define directories for images and figures\
+IMGDIRS = Images figures\
+\
+# Define the PDF viewer\
+PDFVIEWER = open\
+\
+# Define LaTeX commands\
+LATEXMK = latexmk\
+PDFLATEX = pdflatex\
+\
+# Default target\
+all: pdf\
+\
+# Build the PDF using latexmk\
+pdf:\
+	$(LATEXMK) -pdf $(MAIN).tex\
+\
+# Clean auxiliary files\
+clean:\
+	$(LATEXMK) -c\
+\
+# Clean all generated files, including the PDF\
+cleanall:\
+	$(LATEXMK) -C\
+\
+# Open the PDF in the default viewer\
+view: pdf\
+	$(PDFVIEWER) $(MAIN).pdf\
+\
+# Force rebuild\
+rebuild:\
+	$(LATEXMK) -pdf -g $(MAIN).tex\
+\
+# Check for missing images\
+check-images:\
+	@for dir in $(IMGDIRS); do \\\
+		if [ ! -d $$dir ]; then \\\
+			echo "Warning: Directory $$dir not found!"; \\\
+		fi; \\\
+	done\
+}

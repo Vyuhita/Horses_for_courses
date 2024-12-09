@@ -1,0 +1,39 @@
+
+\tikzset{
+    >=stealth',
+    % Specifications for style of nodes:
+    base/.style = {
+            rectangle,
+            rounded corners,
+            draw=black,
+            minimum width=1in,
+            minimum height=0.5in,
+            text centered
+            % ,
+            % font=\sffamily
+        },
+    every node/.style={
+            inner sep=.25cm,
+            fill=white
+            % ,
+            % font=\sffamily
+        }
+}
+\tikzstyle{XOR} = [draw,circle]
+\tikzstyle{line} = [draw, very thick, color=black!50, -latex']
+
+
+\begin{tikzpicture}[node distance=0.5cm, align=center]
+    \node[base](spec){Specification};
+    \node[base,below = of spec](d2p){D2P};
+    \node[base,below = of d2p](gen){MPI + Cilk \\ implementation \\ with gaps};
+    \node[XOR,inner sep=0, right = of gen](xor){\huge +};
+    \node[base,right = of xor](usr){Optimized kernels\\  like AVX, \\ AVX2 and CUDA-C};
+    \node[base,below = of xor, yshift=-0.5cm](done){Completed \\ implementation};
+    
+	\path [line] (spec) -- (d2p);
+	\path [line] (d2p) -- (gen);
+	\path [line] (gen) -- (xor);
+	\path [line] (usr) -- (xor);
+    \path [line] (xor) -- (done);
+\end{tikzpicture}

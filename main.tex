@@ -1,0 +1,77 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+%\bibliographystyle{IEEEtran}
+%\bibliography{references}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\PassOptionsToPackage{switch}{lineno} % Pass 'switch' option before loading
+\usepackage{lineno}
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{blindtext}
+\usepackage{flowchart}
+\usepackage{mdframed}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,shapes.geometric,fit}
+\usepackage{float}
+\usepackage{minted}
+% Ensure compatibility with TikZ
+ % Uncomment only if necessary
+ \tikzset{sharp corners/.append style={rounded corners=0pt}}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{algorithm}
+%\usepackage{algorithmic}
+\usepackage{algpseudocode}
+%\usepackage[switch]{lineno}
+\usepackage{comment}
+\usepackage{textcomp}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+\pagestyle{plain}
+\title{Horses for Courses: Understanding System Development Parameters for the Matrix Multiplication Kernel
+ \\
+}
+\begin{comment}
+\author{\IEEEauthorblockN{Vyuhita Bonthu}
+\IEEEauthorblockA{\textit{Indian Institute of Technology Dharwad, India} \\
+\textit{212011001@iitdh.ac.in}}
+\and
+\IEEEauthorblockN{Nikhil Hegde}
+\IEEEauthorblockA{\textit{Indian Institute of technology Dharwad, India} \\
+\textit{nikhilh@iitdh.ac.in}}
+}
+\end{comment}
+\maketitle
+
+\begin{abstract}
+\input{abstract}
+\end{abstract}
+
+
+%\end{IEEEkeywords}
+
+\section{Introduction}
+\input{Introduction}
+
+\section{Producing Parallel Code and Augmenting}
+\input{PRODUCING PARALLEL CODE AND AUGMENTING}
+
+\section{Analysis of System Development Parameters}
+\input{Analysis of System Development Parameters}
+
+
+\section{Related Work}
+\input{RelatedWork}
+
+
+\section{Conclusions}
+\input{Conclusions}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}
